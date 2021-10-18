@@ -1,15 +1,19 @@
 package movies.dto;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-@Data @Getter @Setter
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity @Data
 public class Actor {
+
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private int id;
     private String name;
-    private int id;
-    public Actor(int id, String name) {
-        this.id = id;
+    @ManyToMany(mappedBy = "actors") List<Movie> movies = new ArrayList<>();
+
+    public Actor(String name) {
         this.name = name;
     }
 
