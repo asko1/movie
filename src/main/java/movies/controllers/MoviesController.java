@@ -1,6 +1,7 @@
 package movies.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import movies.ActorModelAssembler;
 import movies.MovieModelAssembler;
 import movies.dto.Actor;
 import movies.dto.Movie;
@@ -10,29 +11,30 @@ import movies.repos.MovieRepository;
 import movies.exceptions.MovieNotFoundException;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 @RestController
 @Slf4j
 public class MoviesController {
 
     private final MovieRepository movieRepository;
     private final ActorRepository actorRepository;
-
     private final MovieModelAssembler movieAssembler;
+    private final ActorModelAssembler actorAssembler;
 
-    MoviesController(MovieRepository movieRepository, ActorRepository actorRepository, MovieModelAssembler movieAssembler) {
+    MoviesController(MovieRepository movieRepository, ActorRepository actorRepository, MovieModelAssembler movieAssembler, ActorModelAssembler actorAssembler) {
         this.movieRepository = movieRepository;
         this.actorRepository = actorRepository;
         this.movieAssembler = movieAssembler;
+        this.actorAssembler = actorAssembler;
     }
 
     // Movies
@@ -47,8 +49,9 @@ public class MoviesController {
     }
 
     @PostMapping("v1/movies")
-    public Movie newMovie(@RequestBody Movie newMovie) {
-        return movieRepository.save(newMovie);
+    public EntityModel<Movie> newMovie(@RequestBody Movie newMovie) {
+        movieRepository.save(newMovie);
+        return movieAssembler.toModel(newMovie);
     }
 
     @GetMapping("v1/movies/{id}")
@@ -59,20 +62,44 @@ public class MoviesController {
         return movieAssembler.toModel(movie);
     }
 
-    @PutMapping(value = "v1/movies/{id}", consumes = "text/uri-list", produces = "text/uri-list")
-    public Movie editMovie(@RequestBody Movie newMovie, @PathVariable int id) {
+    @PutMapping(value = "v1/movies/{id}")
+    public EntityModel<Movie> editMovie(@RequestBody Movie newMovie, @PathVariable int id) {
 
-        log.info(String.valueOf(newMovie));
-        return movieRepository.findById(id)
+        List<Actor> actors = new ArrayList<>();
+
+        if (newMovie.getActors().size() != 0) {
+            actors.add(actorRepository.findById(newMovie.getActors().get(0).getId()).get());
+        }
+
+        Movie updatedMovie = movieRepository.findById(id)
             .map(movie -> {
-                log.info(String.valueOf(newMovie));
-                movie.setName(newMovie.getName());
+
+                if (newMovie.getName() != null) {
+                    movie.setName(newMovie.getName());
+                }
+
+                if (newMovie.getActors().size() != 0) {
+                    movie.setActors(actors);
+                }
+
                 return movieRepository.save(movie);
             })
                 .orElseGet(() -> {
+
                     newMovie.setId(id);
                     return movieRepository.save(newMovie);
             });
+        return movieAssembler.toModel(updatedMovie);
+    }
+
+    @GetMapping("v1/movies/{id}/actors")
+    public CollectionModel<EntityModel<Actor>> allMovieActors(@PathVariable int id) {
+
+        List<EntityModel<Actor>> actors = movieRepository.findById(id).get().getActors().stream()
+                .map(actorAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(actors, linkTo(methodOn(MoviesController.class).allMovieActors(id)).withSelfRel());
     }
 
     @DeleteMapping("v1/movies/{id}")
@@ -80,34 +107,73 @@ public class MoviesController {
         movieRepository.deleteById(id);
     }
 
+
+    ////////////
+    // Actors //
+    ////////////
+
+
     @GetMapping("v1/actors")
-    List<Actor> allActors() {
-        return actorRepository.findAll();
+    public CollectionModel<EntityModel<Actor>> allActors() {
+
+        List<EntityModel<Actor>> actors = actorRepository.findAll().stream()
+                .map(actorAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(actors, linkTo(methodOn(MoviesController.class).allActors()).withSelfRel());
     }
 
     @PostMapping("v1/actors")
-    Actor newActor(@RequestBody Actor newActor) {
-        return actorRepository.save(newActor);
+    EntityModel<Actor> newActor(@RequestBody Actor newActor) {
+        actorRepository.save(newActor);
+        return actorAssembler.toModel(newActor);
     }
 
     @GetMapping("v1/actors/{id}")
-    Actor oneActor(@PathVariable int id) {
-        return actorRepository.findById(id)
+    public EntityModel<Actor> oneActor(@PathVariable int id) {
+        Actor actor = actorRepository.findById(id)
                 .orElseThrow(() -> new ActorNotFoundException(id));
+
+        return actorAssembler.toModel(actor);
     }
 
-    @PutMapping("v1/actors/{id}")
-    Actor editActor(@RequestBody Actor newActor, @PathVariable int id) {
+    @PutMapping(value = "v1/actors/{id}")
+    public EntityModel<Actor> editActor(@RequestBody Actor newActor, @PathVariable int id) {
 
-        return actorRepository.findById(id)
+        List<Movie> movies = new ArrayList<>();
+
+        if (newActor.getMovies() != null) {
+            movies.add(movieRepository.findById(newActor.getMovies().get(0).getId()).get());
+        }
+
+        Actor updatedActor = actorRepository.findById(id)
                 .map(actor -> {
-                    actor.setName(newActor.getName());
+
+                    if (newActor.getName() != null) {
+                        actor.setName(newActor.getName());
+                    }
+
+                    if (newActor.getMovies() != null) {
+                        actor.setMovies(movies);
+                    }
+
                     return actorRepository.save(actor);
                 })
                 .orElseGet(() -> {
                     newActor.setId(id);
                     return actorRepository.save(newActor);
                 });
+        return actorAssembler.toModel(updatedActor);
+    }
+
+    @GetMapping("v1/actors/{id}/movies")
+    public CollectionModel<EntityModel<Movie>> allActorMovies(@PathVariable int id) {
+
+        List<EntityModel<Movie>> movies = actorRepository.findById(id).get().getMovies().stream()
+                .map(movieAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(movies, linkTo(methodOn(MoviesController.class).allActorMovies(id)).withSelfRel());
     }
 
     @DeleteMapping("v1/actors/{id}")

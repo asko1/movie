@@ -18,16 +18,16 @@ public class LoadDatabase {
     @Bean
     CommandLineRunner initMovieDatabase(MovieRepository movieRepository) {
         return args -> {
-            log.info("Preloading " + movieRepository.save(new Movie("Lord of the Rings")));
-            log.info("Preloading " + movieRepository.save(new Movie("Lord of the Kings")));
+            log.info("Preloading " + movieRepository.save(new Movie(0, "Lord of the Rings")));
+            log.info("Preloading " + movieRepository.save(new Movie(0, "Lord of the Kings")));
         };
     }
 
     @Bean
     CommandLineRunner initActorDatabase(ActorRepository actorRepository) {
         return args -> {
-            log.info("Preloading " + actorRepository.save(new Actor("Indrek Ott")));
-            log.info("Preloading " + actorRepository.save(new Actor("Asko Mägi")));
+            log.info("Preloading " + actorRepository.save(new Actor(0, "Asko Mägi")));
+            log.info("Preloading " + actorRepository.save(new Actor(0, "Indrek Ott")));
         };
     }
 }

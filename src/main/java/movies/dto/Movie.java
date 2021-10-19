@@ -1,5 +1,6 @@
 package movies.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -11,15 +12,18 @@ public class Movie {
 
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private int id;
     private String name;
-    @ManyToMany(cascade = CascadeType.ALL) List<Actor> actors = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("movies")
+    List<Actor> actors = new ArrayList<>();
 
-    public Movie(String name, List<Actor> actors) {
+    public Movie(int id, String name, List<Actor> actors) {
+        this.id = id;
         this.name = name;
         this.actors = actors;
     }
 
-    public Movie(String name) {
-        this(name, null);
+    public Movie(int id, String name) {
+        this(id, name, null);
     }
 
     public Movie() {
