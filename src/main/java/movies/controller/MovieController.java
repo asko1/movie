@@ -102,8 +102,9 @@ public class MovieController {
     }
 
     @DeleteMapping("v1/movies/{id}")
-    public void DeleteMovie(@PathVariable int id) {
+    public String DeleteMovie(@PathVariable int id) {
         movieRepository.deleteById(id);
+        return "Movie deleted!";
     }
 
 

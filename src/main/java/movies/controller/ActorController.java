@@ -98,7 +98,8 @@ public class ActorController {
     }
 
     @DeleteMapping("v1/actors/{id}")
-    void DeleteActor(@PathVariable int id) {
+    public String DeleteActor(@PathVariable int id) {
         actorRepository.deleteById(id);
+        return "Actor deleted!";
     }
 }
