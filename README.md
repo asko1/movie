@@ -114,7 +114,7 @@ Body
 ```json
 {
     "name": "New Name Movie",
-    "actors": [{"id": 1}, {"id": 2}] //
+    "actors": [{"id": 1}, {"id": 2}]
 }
 ```
 
