@@ -1,6 +1,6 @@
-package movies;
+package movies.assembler;
 
-import movies.controllers.MoviesController;
+import movies.controller.ActorController;
 import movies.dto.Actor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
@@ -16,7 +16,8 @@ public class ActorModelAssembler implements RepresentationModelAssembler<Actor, 
     public EntityModel<Actor> toModel(Actor actor) {
 
         return EntityModel.of(actor,
-                linkTo(methodOn(MoviesController.class).oneActor(actor.getId())).withSelfRel(),
-                linkTo(methodOn(MoviesController.class).allActors()).withRel("actors"));
+            linkTo(methodOn(ActorController.class).oneActor(actor.getId())).withSelfRel(),
+            linkTo(methodOn(ActorController.class).allActors()).withRel("actors"),
+            linkTo(methodOn(ActorController.class).allMovieActors(actor.getId())).withRel("actorMovies"));
     }
 }

@@ -1,14 +1,13 @@
-package movies.controllers;
+package movies.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import movies.ActorModelAssembler;
-import movies.MovieModelAssembler;
+import movies.assembler.ActorModelAssembler;
+import movies.assembler.MovieModelAssembler;
 import movies.dto.Actor;
 import movies.dto.Movie;
-import movies.exceptions.ActorNotFoundException;
-import movies.repos.ActorRepository;
-import movies.repos.MovieRepository;
-import movies.exceptions.MovieNotFoundException;
+import movies.repo.ActorRepository;
+import movies.repo.MovieRepository;
+import movies.exception.MovieNotFoundException;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
@@ -23,18 +22,16 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 @RestController
 @Slf4j
-public class MoviesController {
+public class MovieController {
 
     private final MovieRepository movieRepository;
     private final ActorRepository actorRepository;
     private final MovieModelAssembler movieAssembler;
-    private final ActorModelAssembler actorAssembler;
 
-    MoviesController(MovieRepository movieRepository, ActorRepository actorRepository, MovieModelAssembler movieAssembler, ActorModelAssembler actorAssembler) {
+    MovieController(MovieRepository movieRepository, ActorRepository actorRepository, MovieModelAssembler movieAssembler) {
         this.movieRepository = movieRepository;
         this.actorRepository = actorRepository;
         this.movieAssembler = movieAssembler;
-        this.actorAssembler = actorAssembler;
     }
 
     // Movies
@@ -45,7 +42,7 @@ public class MoviesController {
             .map(movieAssembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(movies, linkTo(methodOn(MoviesController.class).allMovies()).withSelfRel());
+        return CollectionModel.of(movies, linkTo(methodOn(MovieController.class).allMovies()).withSelfRel());
     }
 
     @PostMapping("v1/movies")
@@ -68,7 +65,9 @@ public class MoviesController {
         List<Actor> actors = new ArrayList<>();
 
         if (newMovie.getActors().size() != 0) {
-            actors.add(actorRepository.findById(newMovie.getActors().get(0).getId()).get());
+            for (Actor actor: newMovie.getActors()) {
+                actors.add(actorRepository.findById(actor.getId()).get());
+            }
         }
 
         Movie updatedMovie = movieRepository.findById(id)
@@ -92,14 +91,14 @@ public class MoviesController {
         return movieAssembler.toModel(updatedMovie);
     }
 
-    @GetMapping("v1/movies/{id}/actors")
-    public CollectionModel<EntityModel<Actor>> allMovieActors(@PathVariable int id) {
+    @GetMapping("v1/actors/{id}/movies")
+    public CollectionModel<EntityModel<Movie>> allActorMovies(@PathVariable int id) {
 
-        List<EntityModel<Actor>> actors = movieRepository.findById(id).get().getActors().stream()
-                .map(actorAssembler::toModel)
+        List<EntityModel<Movie>> movies = actorRepository.findById(id).get().getMovies().stream()
+                .map(movieAssembler::toModel)
                 .collect(Collectors.toList());
 
-        return CollectionModel.of(actors, linkTo(methodOn(MoviesController.class).allMovieActors(id)).withSelfRel());
+        return CollectionModel.of(movies, linkTo(methodOn(MovieController.class).allActorMovies(id)).withSelfRel());
     }
 
     @DeleteMapping("v1/movies/{id}")
@@ -112,6 +111,15 @@ public class MoviesController {
     // Actors //
     ////////////
 
+    /*@GetMapping("v1/movies/{id}/actors")
+    public CollectionModel<EntityModel<Actor>> allMovieActors(@PathVariable int id) {
+
+        List<EntityModel<Actor>> actors = movieRepository.findById(id).get().getActors().stream()
+                .map(actorAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(actors, linkTo(methodOn(MoviesController.class).allMovieActors(id)).withSelfRel());
+    }
 
     @GetMapping("v1/actors")
     public CollectionModel<EntityModel<Actor>> allActors() {
@@ -179,5 +187,5 @@ public class MoviesController {
     @DeleteMapping("v1/actors/{id}")
     void DeleteActor(@PathVariable int id) {
         actorRepository.deleteById(id);
-    }
+    }*/
 }

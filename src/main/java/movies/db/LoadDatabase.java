@@ -1,9 +1,9 @@
-package movies;
+package movies.db;
 
 import movies.dto.Actor;
 import movies.dto.Movie;
-import movies.repos.ActorRepository;
-import movies.repos.MovieRepository;
+import movies.repo.ActorRepository;
+import movies.repo.MovieRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;

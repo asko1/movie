@@ -1,4 +1,4 @@
-package movies.exceptions;
+package movies.exception;
 
 public class ActorNotFoundException extends RuntimeException {
     public ActorNotFoundException(int id) {

@@ -1,4 +1,4 @@
-package movies.repos;
+package movies.repo;
 
 import movies.dto.Actor;
 import org.springframework.data.jpa.repository.JpaRepository;
