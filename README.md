@@ -1,5 +1,7 @@
 # Movies
 
+Functional example RESTful API with two classes (Movie and Actor) in Java Spring Boot with JPA repositories.
+
 Swagger available at `http://localhost:800/swagger-ui/index.html`
 
 NB! Most requests produce similar results from the actor point of view (eg `GET v1/actors` instead of `GET v1/movies`, so they are omitted for simplicity and shortness.
